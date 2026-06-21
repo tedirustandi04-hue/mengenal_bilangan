@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="id">
+ <head><script src="/_sdk/telemetry_sdk.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mengenal Bilangan 1-10</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
+  <style>
+        body { font-family: 'DM Sans', sans-serif; }
+        .bounce { animation: bounce 0.5s; }
+        @keyframes bounce { 0%,100%{transform:scale(1)} 50%{transform:scale(1.3)} }
+        .shake { animation: shake 0.4s; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+        .pop-in { animation: popIn 0.3s ease-out forwards; opacity:0; }
+        @keyframes popIn { to{opacity:1;transform:scale(1)} from{opacity:0;transform:scale(0.5)} }
+        .num-btn { transition: transform 0.15s, box-shadow 0.15s; }
+        .num-btn:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+    </style>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js" type="text/javascript"></script>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/resizing_sdk.js" type="text/javascript"></script>
+ </head>
+ <body data-template-id="__page-root" class="min-h-screen">
+  <header class="text-center pt-8 pb-4 px-4">
+   <h1 data-template-id="page-title" class="canva-text text-3xl font-bold"></h1>
+   <p data-template-id="page-subtitle" class="canva-text mt-2 text-lg"></p>
+  </header>
+  <main class="max-w-3xl mx-auto px-4 pb-12">
+   <!-- Hero image -->
+   <div class="flex justify-center mb-6">
+    <img data-template-id="hero-img" class="canva-image w-full max-w-md h-48 object-cover rounded-2xl shadow-lg" loading="lazy">
+   </div><!-- Number Grid -->
+   <section>
+    <h2 data-template-id="section-grid-title" class="canva-text text-xl font-bold text-center mb-4"></h2>
+    <div class="grid grid-cols-5 gap-3 mb-4" id="number-grid"></div>
+    <div id="object-display" class="min-h-[60px] flex flex-wrap justify-center items-center gap-2 text-4xl p-4 rounded-xl bg-white/60"></div>
+   </section><!-- Quiz Section -->
+   <section class="mt-10">
+    <h2 data-template-id="section-quiz-title" class="canva-text text-xl font-bold text-center mb-4"></h2>
+    <div id="quiz-area" class="bg-white rounded-2xl shadow-lg p-6 text-center">
+     <div id="quiz-start">
+      <button data-template-id="start-quiz-btn" class="canva-button px-6 py-3 rounded-full font-bold text-lg" onclick="startQuiz()"></button>
+     </div>
+     <div id="quiz-content" class="hidden">
+      <p class="text-lg font-medium mb-2" data-template-id="quiz-question-label"></p>
+      <div id="quiz-objects" class="text-5xl my-4 flex flex-wrap justify-center gap-1"></div>
+      <div id="quiz-options" class="flex justify-center gap-4 mt-4"></div>
+      <div id="quiz-feedback" class="mt-4 text-xl font-bold h-8"></div><button id="next-btn" class="hidden mt-4 px-5 py-2 bg-indigo-500 text-white rounded-full font-bold" onclick="nextQuestion()">Soal Berikutnya →</button>
+     </div>
+     <div id="quiz-done" class="hidden">
+      <p id="quiz-score" class="text-2xl font-bold mb-4"></p><button class="px-5 py-2 bg-indigo-500 text-white rounded-full font-bold" onclick="startQuiz()">Main Lagi!</button>
+     </div>
+    </div>
+   </section>
+  </main>
+  <script src="/_sdk/editing_sdk.js"></script>
+  <script>
+        const emoji = '⭐';
+
+        // Build number grid
+        const grid = document.getElementById('number-grid');
+        for (let i = 1; i <= 10; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'num-btn w-full aspect-square rounded-xl bg-white shadow text-2xl font-bold text-indigo-700 flex items-center justify-center';
+            btn.textContent = i;
+            btn.onclick = () => showObjects(i);
+            grid.appendChild(btn);
+        }
+
+        function showObjects(n) {
+            const display = document.getElementById('object-display');
+            display.innerHTML = '';
+            for (let i = 0; i < n; i++) {
+                const span = document.createElement('span');
+                span.textContent = emoji;
+                span.className = 'pop-in';
+                span.style.animationDelay = (i * 0.07) + 's';
+                display.appendChild(span);
+            }
+        }
+
+        // Quiz
+        let quizQuestions = [], currentQ = 0, score = 0;
+
+        function generateQuestions() {
+            quizQuestions = [];
+            const used = new Set();
+            while (quizQuestions.length < 5) {
+                const n = Math.floor(Math.random() * 10) + 1;
+                if (used.has(n)) continue;
+                used.add(n);
+                const options = new Set([n]);
+                while (options.size < 3) options.add(Math.floor(Math.random() * 10) + 1);
+                quizQuestions.push({ answer: n, options: [...options].sort(() => Math.random() - 0.5) });
+            }
+        }
+
+        function startQuiz() {
+            generateQuestions(); currentQ = 0; score = 0;
+            document.getElementById('quiz-start').classList.add('hidden');
+            document.getElementById('quiz-done').classList.add('hidden');
+            document.getElementById('quiz-content').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = quizQuestions[currentQ];
+            const objDiv = document.getElementById('quiz-objects');
+            objDiv.innerHTML = '';
+            for (let i = 0; i < q.answer; i++) {
+                const span = document.createElement('span');
+                span.textContent = emoji;
+                span.className = 'pop-in';
+                span.style.animationDelay = (i * 0.05) + 's';
+                objDiv.appendChild(span);
+            }
+            const optDiv = document.getElementById('quiz-options');
+            optDiv.innerHTML = '';
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'w-14 h-14 rounded-full bg-yellow-300 text-xl font-bold shadow hover:scale-110 transition-transform';
+                btn.textContent = opt;
+                btn.onclick = () => checkAnswer(opt, btn);
+                optDiv.appendChild(btn);
+            });
+            document.getElementById('quiz-feedback').textContent = '';
+            document.getElementById('next-btn').classList.add('hidden');
+        }
+
+        function checkAnswer(selected, btn) {
+            const q = quizQuestions[currentQ];
+            const feedback = document.getElementById('quiz-feedback');
+            document.querySelectorAll('#quiz-options button').forEach(b => b.disabled = true);
+            if (selected === q.answer) {
+                score++;
+                feedback.textContent = '✅ Benar! Hebat!';
+                feedback.className = 'mt-4 text-xl font-bold h-8 text-green-600 bounce';
+            } else {
+                feedback.textContent = `❌ Jawabannya ${q.answer}`;
+                feedback.className = 'mt-4 text-xl font-bold h-8 text-red-500 shake';
+            }
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQ++;
+            if (currentQ >= quizQuestions.length) {
+                document.getElementById('quiz-content').classList.add('hidden');
+                document.getElementById('quiz-done').classList.remove('hidden');
+                document.getElementById('quiz-score').textContent = `Skor kamu: ${score} / ${quizQuestions.length} ⭐`;
+            } else {
+                showQuestion();
+            }
+        }
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0f3be21a554fcee',t:'MTc4MjA1MjU1Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
